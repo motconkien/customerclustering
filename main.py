@@ -139,7 +139,7 @@ def plot_3d_scatter(df, kmeans_model, scaler, title):
         mode='markers', marker=dict(size=12, color='red', symbol='x'),
         name='Cluster Centers'
     )
-    fig.update_traces(marker=dict(size=2))
+    fig.update_traces(marker=dict(size=1))
     fig.update_layout(
         coloraxis_showscale=False,
         margin=dict(l=0, r=0, b=0, t=40),
@@ -483,6 +483,18 @@ def Prediction():
         show_cluster_stats(kmeans_pred[0],k_slider,transaction_data,product_data)
         show_recommendations(kmeans_pred[0],k_slider)
     
+    id = st.number_input("Enter customer ID", step=1, format="%d")
+    k = st.radio("Choose number of clusters (k):", [3, 4], key="k")
+
+    # Only run check when ID is entered (greater than 0, or you can change the condition based on your ID range)
+    if id in RFM_data['Member_number'].values:
+        if k == 3:
+            st.dataframe(df_RFM_3[df_RFM_3['Member_number'] == id])
+        elif k == 4:
+            st.dataframe(df_RFM_4[df_RFM_4['Member_number'] == id])
+    else:
+        st.warning("Customer ID not found! Please enter a valid ID from the dataset.")
+        
     st.write("---")
     st.write("##### Upload file (Batch Prediction using GMM)")
 
