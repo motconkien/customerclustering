@@ -565,59 +565,60 @@ def datainsight():
 
 def models():
     # Result from KMeans and GMM
-    st.write("#### Modelling with KMeans and GMM")
+    st.write("### Modelling with KMeans and GMM")
     st.markdown("---")
-    st.write("### Algorithm")
-    st.write("- **KMeans**: A popular clustering algorithm that partitions the data into k clusters, minimizing the variance within each Cluster.")
+    st.write("#### 1. Algorithm")
+    st.write("- **KMeans**: A popular clustering algorithm that partitions the data into k clusters, minimizing the variance within each Cluster. ")
     st.write("- **GMM (Gaussian Mixture Model)**: A probabilistic model that assumes all data points are generated from a mixture of a finite number of Gaussian distributions with unknown parameters.")
-    st.image("./img/gmm_vs_kmeans_1.png",  use_container_width=True)
+    st.image("./img/gmm_vs_kmeans_1.png",  use_container_width=True, caption="GMM and Kmeans in Clustering")
     st.markdown("---")
-    st.subheader("Models")
-    st.markdown('<h5 style="color: #FF6347;">With K = 3</h5>', unsafe_allow_html=True)
-    st.image("./img/score_3.png", use_container_width=True)
-    st.markdown('<h5 style="color: #FF6347;">With K = 4</h5>', unsafe_allow_html=True)
-    st.image("./img/K.png", use_container_width=True)
+    st.write("#### 2. Models")
+    st.markdown('<h5 style="color: #FF6347;">Kmeans with K = 4</h5>', unsafe_allow_html=True)
+    st.image("./img/kmeans_mod.png", use_container_width=True, caption="Kmeans Scores Graph: Elbow Method, Silhouette Score, Davies-Bouldin Index")
+    st.markdown('<h5 style="color: #FF6347;">GMM with K = 5</h5>', unsafe_allow_html=True)
+    st.image("./img/gmm_mod.png", use_container_width=True, caption="GMM Scores Graph: Silhouette Score, BIC Score, AIC Score")
     st.markdown("---")
-    st.subheader("Model Evaluation Metrics")
+    st.write("#### 3. Model Evaluation Metrics")
     metrics = {
-    'Model': ['KMeans', 'GMM', 'KMeans', 'GMM'],
-    'K': [3, 3, 4, 4],
-    'SSE': [4227.17,None, 3309.40,None ],
-    'Silhouette Score': [0.3724, 0.2708, 0.3315, 0.2385],
-    'BIC': [None, 25376.36, None, 25090.15],
-    'AIC': [None, 25194.58, None, 24845.69]
+    'Model': ['Kmeans', 'GMM'],
+    'K (Optimal)': [4,5],
+    'Silhouette Score': [0.33, 0.19],
+    'Model Training Time': [0.066, 2.828],
+    'Prediction Time': [0.063, 0.03]
 }
     df_metrics = pd.DataFrame(metrics)
 
-    st.subheader("Model Evaluation Metrics")
     st.dataframe(df_metrics, use_container_width=True)
+    
     st.markdown("""
     **Conclusion**  
-    - Firstly, though k = 3 has higher silhouette score, but in the elbow method, it is clearly visible that k = 4 is the cut off point which indicates that cluster 4 might be better 
-    - In addition, in GMM model, the lower BIC and AIC score, the more fitting => should choose 4 
-    - Finally, because the silhouette score of GMM is smaller than silhouette score of Kmeans, it demonstrates that Kmeans works better than GMM
-    => **k = 4** is a better choice based on these metrics.
+    - Because Silhouette Score of Kmeans is higher than that of GMM
+    - The training time and prediction time of KMeans are shorter than those of GMM
+    <br> => Kmeans is the best choice in this case       
     """)
 
-
-    st.subheader("Customer Segments Visualization")
-    st.markdown('<h5 style="color: #FF6347;">With K = 3</h5>', unsafe_allow_html=True)
+    st.write("---")
+    st.write("#### 4. Customer Segments Visualization")
+   # KMeans results section
+    st.markdown('<h5 style="color: #FF6347;">KMeans with K = 4</h5>', unsafe_allow_html=True)
     col6, col7 = st.columns(2)
 
     with col6:
-        plot_treemap(cluster_summary_3, "Customer Segments - Treemap")
-
-    with col7:
-        plot_3d_scatter(df_RFM_3, kmeans_model_3, scaler, "Customer Segmentation with KMeans (3D)")
-
-    st.markdown('<h5 style="color: #FF6347;">With K = 4</h5>', unsafe_allow_html=True)
-    col8, col9 = st.columns(2)
-
-    with col8:
         plot_treemap(cluster_summary_4, "Customer Segments - Treemap")
 
-    with col9:
+    with col7:
         plot_3d_scatter(df_RFM_4, kmeans_model, scaler, "Customer Segmentation with KMeans (3D)")
+
+    # # GMM results section
+    # st.markdown('<h5 style="color: #FF6347;">GMM with K = 4</h5>', unsafe_allow_html=True)
+    # col8, col9 = st.columns(2)
+
+    # with col8:
+    #     plot_treemap(cluster_summary_4_gmm, "Customer Segments - Treemap")
+
+    # with col9:
+    #     plot_3d_scatter(df_RFM_4_gmm, gmm_model, scaler, "Customer Segmentation with GMM (3D)")
+
 
 #prediction page: need to change k =3,4 to choose models
 # summary first / file / ID/ -> summary per Cluster
