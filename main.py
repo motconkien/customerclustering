@@ -729,18 +729,7 @@ def Prediction():
        
         kmeans_pred = kmeans_model.predict(scaled_input)
         cluster_info =  cluster_summary_4[cluster_summary_4['Cluster'] == kmeans_pred[0]].iloc[0]
-        # else:
-        #     kmeans_pred = gmm_model.predict(scaled_input)
-        #     cluster_info = cluster_summary_4_gmm[cluster_summary_4_gmm['Cluster'] == kmeans_pred[0]].iloc[0]
-        # name = ""
-        # if kmeans_pred[0] == 0: 
-        #     name += "Normal"
-        # elif kmeans_pred[0] == 1: 
-        #     name += "Risk"
-        # elif kmeans_pred[0] == 2: 
-        #     name += "Vip"
-        # else:
-        #     name += "New"
+       
 
         st.write(f"##### Predicted Cluster: :blue[{kmeans_pred[0]} - {get_cluster_name(kmeans_pred[0])} customer]")
         st.write(f"###### Cluster {kmeans_pred[0]} -  Characteristics:")
