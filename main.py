@@ -9,6 +9,7 @@ import plotly.graph_objects as go
 from collections import Counter
 from itertools import combinations
 
+st.set_page_config(layout="wide") #expand layout
 #-----------------PREPARE-----------------#
 product_data = pd.read_csv("./data/Products_with_Categories.csv")
 transaction_data = pd.read_csv('./data/Transactions.csv')
@@ -67,34 +68,49 @@ with open('./models/scaler.pkl', 'rb') as f:
 #prepare character to display, has to use df_RFM
 df_RFM = RFM_data[['Recency', 'Frequency', 'Monetary']]
 df_RFM_3 = df_RFM.copy()
-df_RFM_3['cluster'] = kmeans_model_3.labels_
+df_RFM_3['Cluster'] = kmeans_model_3.labels_
 df_RFM_3['Member_number'] = RFM_data['Member_number'].values
-cluster_summary_3 = df_RFM_3.groupby('cluster').agg(
-    Count = ('cluster', 'size'),
+cluster_summary_3 = df_RFM_3.groupby('Cluster').agg(
+    Count = ('Cluster', 'size'),
     Avg_Recency=('Recency', 'mean'),
     Avg_Frequency=('Frequency', 'mean'),
     Avg_Monetary=('Monetary', 'mean')
 ).reset_index()
 cluster_summary_3['label'] = ['Cluster {}: {:.0f} customers\nAvg Recency: {:.0f} days\nAvg Frequency: {:.0f} orders\nAvg Monetary: ${:.0f}'.format(
-    row['cluster'], row['Count'], row['Avg_Recency'], row['Avg_Frequency'], row['Avg_Monetary']) 
+    row['Cluster'], row['Count'], row['Avg_Recency'], row['Avg_Frequency'], row['Avg_Monetary']) 
     for _, row in cluster_summary_3.iterrows()]
 
-# For k=4
+# For k=4 - kmeans 
 df_RFM_4 = df_RFM.copy()
-df_RFM_4['cluster'] = kmeans_model.labels_  
+df_RFM_4['Cluster'] = kmeans_model.labels_  
 df_RFM_4['Member_number'] = RFM_data['Member_number'].values
 
-cluster_summary_4 = df_RFM_4.groupby('cluster').agg(
-    Count = ('cluster', 'size'),
+cluster_summary_4 = df_RFM_4.groupby('Cluster').agg(
+    Count = ('Cluster', 'size'),
     Avg_Recency=('Recency', 'mean'),
     Avg_Frequency=('Frequency', 'mean'),
     Avg_Monetary=('Monetary', 'mean')
 ).reset_index()
 cluster_summary_4['label'] = ['Cluster {}: {:.0f} customers\nAvg Recency: {:.0f} days\nAvg Frequency: {:.0f} orders\nAvg Monetary: ${:.0f}'.format(
-    row['cluster'], row['Count'], row['Avg_Recency'], row['Avg_Frequency'], row['Avg_Monetary']) 
+    row['Cluster'], row['Count'], row['Avg_Recency'], row['Avg_Frequency'], row['Avg_Monetary']) 
     for _, row in cluster_summary_4.iterrows()]
 
-#-----------------HELPER-----------------#
+# For k=4 - gmm 
+df_RFM_4_gmm = df_RFM.copy()
+df_RFM_4_gmm['Cluster'] = kmeans_model.labels_  
+df_RFM_4_gmm['Member_number'] = RFM_data['Member_number'].values
+
+cluster_summary_4_gmm = df_RFM_4_gmm.groupby('Cluster').agg(
+    Count = ('Cluster', 'size'),
+    Avg_Recency=('Recency', 'mean'),
+    Avg_Frequency=('Frequency', 'mean'),
+    Avg_Monetary=('Monetary', 'mean')
+).reset_index()
+cluster_summary_4_gmm['label'] = ['Cluster {}: {:.0f} customers\nAvg Recency: {:.0f} days\nAvg Frequency: {:.0f} orders\nAvg Monetary: ${:.0f}'.format(
+    row['Cluster'], row['Count'], row['Avg_Recency'], row['Avg_Frequency'], row['Avg_Monetary']) 
+    for _, row in cluster_summary_4_gmm.iterrows()]
+
+#-----------------------------------------------------------------HELPER---------------------------------------------------------------------------------#
 # Function to create treemap
 def plot_treemap(cluster_summary, title):
     cluster_summary['formatted_label'] = cluster_summary['label'].str.replace(" ", "\n")
@@ -112,6 +128,7 @@ def plot_treemap(cluster_summary, title):
         ),
         customdata=cluster_summary[['Avg_Recency', 'Avg_Frequency', 'Avg_Monetary']],
         marker=dict(colors=cluster_summary['Count'], colorscale='Viridis', showscale=False),
+        textfont=dict(size=24)
     ))
 
     fig.update_layout(
@@ -126,7 +143,7 @@ def plot_treemap(cluster_summary, title):
 def plot_3d_scatter(df, kmeans_model, scaler, title):
     fig = px.scatter_3d(
         df, x='Recency', y='Frequency', z='Monetary',
-        color='cluster',
+        color='Cluster',
         title=title,
         labels={'Recency': 'Recency', 'Frequency': 'Frequency', 'Monetary': 'Monetary'},
     )
@@ -153,72 +170,68 @@ def plot_3d_scatter(df, kmeans_model, scaler, title):
     st.plotly_chart(fig, use_container_width=True)
 
 
-# Function to show recommendations based on predicted cluster and selected K value
-def show_recommendations(predicted_cluster, k_value):
-    if k_value == 4:
-        if predicted_cluster == 0:
-            st.write("##### Recommendations for Cluster 0: High Recency, Moderate Frequency, High Monetary")
-            st.write("- Reward with VIP programs and exclusive offers.")
-            st.write("- Recommend premium products based on past purchases.")
-            st.write("- Implement personalized marketing strategies.")
+# Function to show recommendations based on predicted Cluster and selected K value
+def show_recommendations(predicted_cluster):
+    if predicted_cluster == 0:
+        st.write("##### Recommendations for Cluster 0  - Normal: High Recency, Moderate Frequency, High Monetary")
+        st.write("- Reward with VIP programs and exclusive offers.")
+        st.write("- Recommend premium products based on past purchases.")
+        st.write("- Implement personalized marketing strategies.")
         
-        elif predicted_cluster == 1:
-            st.write("##### Recommendations for Cluster 1: High Recency, Low Frequency, Low Monetary")
-            st.write("- Send win-back campaigns with discounts or offers.")
-            st.write("- Re-engage through personalized email reminders.")
-            st.write("- Provide incentives for their next purchase.")
+    elif predicted_cluster == 1:
+        st.write("##### Recommendations for Cluster 1 - Risk: High Recency, Low Frequency, Low Monetary")
+        st.write("- Send win-back campaigns with discounts or offers.")
+        st.write("- Re-engage through personalized email reminders.")
+        st.write("- Provide incentives for their next purchase.")
 
-        elif predicted_cluster == 2:
-            st.write("##### Recommendations for Cluster 2: Low Recency, High Frequency, High Monetary")
-            st.write("- Encourage return with special deals or product bundles.")
-            st.write("- Recommend new releases or loyalty rewards.")
-            st.write("- Maintain engagement through exclusive promotions.")
+    elif predicted_cluster == 2:
+        st.write("##### Recommendations for Cluster 2 - Vip: Low Recency, High Frequency, High Monetary")
+        st.write("- Encourage return with special deals or product bundles.")
+        st.write("- Recommend new releases or loyalty rewards.")
+        st.write("- Maintain engagement through exclusive promotions.")
         
-        elif predicted_cluster == 3:
-            st.write("##### Recommendations for Cluster 3: Moderate Recency, Low Frequency, Low Monetary")
-            st.write("- Send low-cost incentives to encourage more purchases.")
-            st.write("- Target with promotions to increase frequency of orders.")
-            st.write("- Recommend budget-friendly products or starter packs.")
-
-    elif k_value == 3:
-        if predicted_cluster == 0:
-            st.write("##### Recommendations for Cluster 0: Moderate Recency, Moderate Frequency, Low Monetary")
-            st.write("- Encourage frequent purchases with promotions or discounts.")
-            st.write("- Recommend value-oriented products.")
-            st.write("- Offer incentives to drive repeat purchases.")
-        
-        elif predicted_cluster == 1:
-            st.write("##### Recommendations for Cluster 1: High Recency, Low Frequency, Low Monetary")
-            st.write("- Use win-back campaigns to bring them back.")
-            st.write("- Provide incentives to encourage their next purchase.")
-            st.write("- Send personalized offers based on past orders.")
-
-        elif predicted_cluster == 2:
-            st.write("##### Recommendations for Cluster 2: Low Recency, High Frequency, High Monetary")
-            st.write("- Offer loyalty programs or exclusive offers for top spenders.")
-            st.write("- Recommend premium or high-ticket items based on their past purchases.")
-            st.write("- Create personalized marketing strategies to maintain engagement.")
-        
+    elif predicted_cluster == 3:
+        st.write("##### Recommendations for Cluster 3 - New: Moderate Recency, Low Frequency, Low Monetary")
+        st.write("- Send low-cost incentives to encourage more purchases.")
+        st.write("- Target with promotions to increase frequency of orders.")
+        st.write("- Recommend budget-friendly products or starter packs.")
     else:
-        st.write("Invalid K value selected. Please choose either K=3 or K=4.")
+        return
 
-def show_cluster_stats(cluster_id, k_value, transaction_df, product_df):
-    st.write(f"## Cluster {cluster_id} Summary")
+def get_cluster_name(Cluster):
+    if Cluster == 1:
+        return "Risk"
+    elif Cluster == 2:
+        return "VIP"
+    elif Cluster == 3:
+        return "New"
+    else:
+        return "Normal"
+    
+def show_cluster_stats(cluster_id, model, transaction_df, product_df):
+    
+    st.write(f"###### Cluster {cluster_id} ({get_cluster_name(cluster_id)}) Summary")
 
-    if k_value == 3:
-        cluster_members = df_RFM_3[df_RFM_3['cluster'] == cluster_id]['Member_number']
+    if model == "Kmeans":
+        cluster_members = df_RFM_4[df_RFM_4['Cluster'] == cluster_id]['Member_number']
         cluster_transactions = transaction_df[transaction_df['Member_number'].isin(cluster_members)]
     else:
-        cluster_members = df_RFM_4[df_RFM_4['cluster'] == cluster_id]['Member_number']
+        cluster_members = df_RFM_4_gmm[df_RFM_4_gmm['Cluster'] == cluster_id]['Member_number']
         cluster_transactions = transaction_df[transaction_df['Member_number'].isin(cluster_members)]
 
-    # Merge with product data for product names
     merged_df = cluster_transactions.merge(product_df, on='productId')
 
     # Most purchased products
-    top_products = merged_df['productName'].value_counts().head(5)
-    st.write("##### 🔝 Top Products in this Cluster:")
-    st.dataframe(top_products)
+    top_products = (
+        merged_df.groupby(['productName', 'price'])
+        .size()
+        .reset_index(name='purchase_count')
+        .sort_values(by='purchase_count', ascending=False)
+        .head(5)
+    )
+    st.write("###### 🔝 Top Products in this Cluster:")
+    #change positions, should put price afer? 
+    st.dataframe(top_products[['productName', 'purchase_count', 'price']])
 
     # Find top product pairs
     pair_df = (
@@ -235,32 +248,86 @@ def show_cluster_stats(cluster_id, k_value, transaction_df, product_df):
             all_pairs.update(pairs)
 
     top_pairs = all_pairs.most_common(5)
-    st.write("##### 🔗 Top Product Pairs in this Cluster:")
+    st.write("###### 🔗 Top Product Pairs in this Cluster:")
     for pair, count in top_pairs:
         st.write(f"- {pair[0]} & {pair[1]} — bought together {count} times")
 
 
+
+#----------------------------------------------------------------------------------------------------------------------------------------------------#
 # Main Function definitions
 def overview():
     st.image("./img/banner.webp",use_container_width=True)
     st.title("Project Overview")
-    st.write("""
-        ### Overview of the Project
-        This project is about building a recommendation system using clustering algorithms such as KMeans and Gaussian Mixture Models (GMM). The goal is to group customers based on their purchasing behaviors (Recency, Frequency, and Monetary).
+    
+    # Background
+    with st.container():
+        st.subheader("Customer segmentation")
+        st.markdown("""
+        Customer segmentation is a fundamental approach in data science that enables businesses to:
+        - Understand different customer profiles based on purchasing behavior,
+        - Personalize marketing strategies and product offerings,
+        - Enhance customer satisfaction and retention.
 
-        The project includes the following:  
-        1. **Project Overview**: To imporve figures of a smaill shop by using customer clustering method to make strategies.    
-        1. **Data Insight**: Analyzing the customer data for meaningful insights.
-        2. **Modelling**: The process of implementing the clustering system.
-        3. **New Prediction**: Making new predictions using the trained model.
+        """)
 
-        This tool will allow users to interact with the data, visualize clustering results, and make predictions for customer segmentation.
-    """)
-    st.markdown("---")
-    st.write("### Algorithm")
-    st.write("- **KMeans**: A popular clustering algorithm that partitions the data into k clusters, minimizing the variance within each cluster.")
-    st.write("- **GMM (Gaussian Mixture Model)**: A probabilistic model that assumes all data points are generated from a mixture of a finite number of Gaussian distributions with unknown parameters.")
-    st.image("./img/gmm_vs_kmeans_1.png",  use_container_width=True)
+    # Business Objective
+    with st.container():
+        st.subheader("Business Objective / Problem")
+        st.markdown("""
+        For Retail Store X, applying customer segmentation helps make informed decisions in product stocking, marketing, and customer care.
+
+        The store owner of Retail Store X aims to:
+        - Understand customer behavior from transactional data,
+        - Recommend the right products to the right customer groups,
+        - Improve customer service quality and increase customer satisfaction.
+        """)
+
+    # Proposed Solution
+    with st.container():
+        st.subheader("💡 Proposed Solution")
+        st.markdown("""
+        To address the business goals, we apply **Data Science** by:
+        - Using RFM (Recency, Frequency, Monetary) analysis to quantify customer behavior,
+        - Applying clustering algorithms to segment customers into meaningful groups.
+        """)
+
+    # Models Used
+    with st.container():
+        st.subheader("⚙️ Models Applied")
+        st.markdown("""
+        - **IQR Rule-Based Segmentation**  
+        - **KMeans** (Scikit-learn and PySpark)  
+        - **Gaussian Mixture Model (GMM)**  
+        - **Hierarchical Clustering**
+        """)
+
+    # Key Result
+    with st.container():
+        st.subheader("✅ Key Result")
+        st.markdown("""
+        Among the models tested, Scikit-learn KMeans produced a balanced segmentation with 4 distinct clusters, achieving a Silhouette Score of 0.38, which indicates a moderate but effective separation between customer groups.
+        """)
+
+    with st.container():
+        st.subheader("🖥️ Streamlit Application Output")
+        st.markdown("""
+        This project is deployed as a **Streamlit web application**, enabling interactive customer segmentation. 
+
+        **Main Features of the App:**
+        - **Overview**: Presenting the project goals, methodology, and results.
+        - **Data Insight**: Visual exploration of RFM metrics and customer behavior.
+        - **Modeling**: Apply clustering algorithms (IQR, KMeans, GMM, Hierarchical) to segment customers.
+        - **New Prediction**: Users can input new RFM values and receive real-time predictions of customer cluster membership.
+
+        The tool supports both data analysis and decision-making by allowing users to:
+        - Visualize cluster structures,
+        - Upload new data for segmentation,
+        - Improve business strategy based on insights.
+
+        This interactive environment helps bridge data science with business strategy, making customer segmentation accessible for small business owners.
+        """)
+    
     
 def datainsight():
     st.title('Data insight')
@@ -394,21 +461,95 @@ def datainsight():
         # Display in Streamlit
         st.pyplot(fig)
     
+    #-------------------The most expensive and cheapest products------------------#
     st.subheader("💰 Revenue Comparison: Expensive vs Cheap Products")
 
     st.dataframe(compare_df)
+    #for revenue
+    figg = go.Figure()
 
-    # Plot revenue
-    fig = px.bar(compare_df, x='productName', y='total_revenue',
-                color='type', barmode='group',
-                title="Total Revenue: Most Expensive vs Cheapest Products",
-                labels={'total_revenue': 'Revenue ($)', 'productName': 'Product'})
-    st.plotly_chart(fig)
-    fig2 = px.bar(compare_df, x='productName', y='quantity_sold',
-              color='type', barmode='group',
-              title="Quantity Sold Comparison",
-              labels={'quantity_sold': 'Items Sold', 'productName': 'Product'})
-    st.plotly_chart(fig2)
+    # Bar chart for revenue sold
+    figg.add_trace(go.Bar(
+        x=compare_df['productName'],
+        y=compare_df['total_revenue'],
+        name='Total Revenue',
+        yaxis='y1'
+    ))
+
+    # Line chart for unit price
+    figg.add_trace(go.Scatter(
+        x=compare_df['productName'],
+        y=compare_df['price'],
+        name='Unit Price',
+        mode='lines+markers',
+        line=dict(color='red', width=3),
+        marker=dict(size=8),
+        yaxis='y2'
+    ))
+
+    # Layout with dual y-axes
+    figg.update_layout(
+        title="Total Revenue vs Unit Price (Most Expensive & Cheapest Products)",
+        xaxis=dict(title="Product"),
+        yaxis=dict(
+            title="Revenue ($)",
+            side="left"
+        ),
+        yaxis2=dict(
+            title="Unit Price ($)",
+            overlaying="y",
+            side="right"
+        ),
+        legend_title="Legend",
+        template='simple_white',
+        barmode='group',
+        xaxis_tickangle=45
+    )
+    st.plotly_chart(figg, use_container_width=True)
+    #for quantity
+    fig = go.Figure()
+
+    # Bar chart for quantity sold
+    fig.add_trace(go.Bar(
+        x=compare_df['productName'],
+        y=compare_df['quantity_sold'],
+        name='Total Quantity Sold',
+        yaxis='y1'
+    ))
+
+    # Line chart for unit price
+    fig.add_trace(go.Scatter(
+        x=compare_df['productName'],
+        y=compare_df['price'],
+        name='Unit Price',
+        mode='lines+markers',
+        line=dict(color='red', width=3),
+        marker=dict(size=8),
+        yaxis='y2'
+    ))
+
+    # Layout with dual y-axes
+    fig.update_layout(
+        title="Quantity Sold vs Unit Price (Most Expensive & Cheapest Products)",
+        xaxis=dict(title="Product"),
+        yaxis=dict(
+            title="Quantity Sold",
+            side="left"
+        ),
+        yaxis2=dict(
+            title="Unit Price ($)",
+            overlaying="y",
+            side="right"
+        ),
+        legend_title="Legend",
+        template='simple_white',
+        barmode='group',
+        xaxis_tickangle=45
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
+    st.write("Though bottled water has the much quantity sole but because the cheap product it is, the revenue is low. " \
+    "In addition, napskin is the expensive product and the quantity sold is moderate, the revenue is more significant than others")
 
     st.subheader(" 📈 RFM Relationship")
     st.write("Monetary and Frequency have a close relationship; when frequency increases, monetary also increases.")
@@ -425,14 +566,40 @@ def datainsight():
 def models():
     # Result from KMeans and GMM
     st.write("#### Modelling with KMeans and GMM")
+    st.markdown("---")
+    st.write("### Algorithm")
+    st.write("- **KMeans**: A popular clustering algorithm that partitions the data into k clusters, minimizing the variance within each Cluster.")
+    st.write("- **GMM (Gaussian Mixture Model)**: A probabilistic model that assumes all data points are generated from a mixture of a finite number of Gaussian distributions with unknown parameters.")
+    st.image("./img/gmm_vs_kmeans_1.png",  use_container_width=True)
+    st.markdown("---")
     st.subheader("Models")
     st.markdown('<h5 style="color: #FF6347;">With K = 3</h5>', unsafe_allow_html=True)
     st.image("./img/score_3.png", use_container_width=True)
     st.markdown('<h5 style="color: #FF6347;">With K = 4</h5>', unsafe_allow_html=True)
     st.image("./img/K.png", use_container_width=True)
-    st.write("**Note**: In the Elbow Method, K = 3 or K = 4 is a visible elbow, suggesting a good trade-off between model complexity and performance.While the Silhouette Score slightly drops at K = 3 or K = 4, it’s still reasonably high, meaning the clusters remain fairly distinct.")
+    st.markdown("---")
+    st.subheader("Model Evaluation Metrics")
+    metrics = {
+    'Model': ['KMeans', 'GMM', 'KMeans', 'GMM'],
+    'K': [3, 3, 4, 4],
+    'SSE': [4227.17,None, 3309.40,None ],
+    'Silhouette Score': [0.3724, 0.2708, 0.3315, 0.2385],
+    'BIC': [None, 25376.36, None, 25090.15],
+    'AIC': [None, 25194.58, None, 24845.69]
+}
+    df_metrics = pd.DataFrame(metrics)
 
-    
+    st.subheader("Model Evaluation Metrics")
+    st.dataframe(df_metrics, use_container_width=True)
+    st.markdown("""
+    **Conclusion**  
+    - Firstly, though k = 3 has higher silhouette score, but in the elbow method, it is clearly visible that k = 4 is the cut off point which indicates that cluster 4 might be better 
+    - In addition, in GMM model, the lower BIC and AIC score, the more fitting => should choose 4 
+    - Finally, because the silhouette score of GMM is smaller than silhouette score of Kmeans, it demonstrates that Kmeans works better than GMM
+    => **k = 4** is a better choice based on these metrics.
+    """)
+
+
     st.subheader("Customer Segments Visualization")
     st.markdown('<h5 style="color: #FF6347;">With K = 3</h5>', unsafe_allow_html=True)
     col6, col7 = st.columns(2)
@@ -452,99 +619,146 @@ def models():
     with col9:
         plot_3d_scatter(df_RFM_4, kmeans_model, scaler, "Customer Segmentation with KMeans (3D)")
 
+#prediction page: need to change k =3,4 to choose models
+# summary first / file / ID/ -> summary per Cluster
 def Prediction():
     st.title("Prediction")
-    st.write("##### Predict from Slider (Single Input using KMeans)")
+
+    
+
+    #predict via files
+    # Predefined file 
+    st.write("##### Upload file")
+    file_option = st.radio("Choose file source", ("Use predefined file","Upload CSV file"))
+
+    # model_choose = st.radio("Choose model for Cluster prediction:", ["Kmeans", "GMM"], key="model")
+    predefined_file_path = "./data/df_RFM.csv"
+
+    if st.button("Show cluster"):
+        #summary
+        
+        
+        st.write("###### Clusters Summary")
+        cluster_summary_4['Type'] = cluster_summary_4['Cluster'].apply(get_cluster_name)
+        for col in ['Avg_Recency', 'Avg_Frequency', 'Avg_Monetary']:
+            cluster_summary_4[col] = cluster_summary_4[col].round(2)
+        df_transposed = cluster_summary_4[['Cluster', 'Type', 'Count', 'Avg_Recency', 'Avg_Frequency', 'Avg_Monetary']].T
+        df_transposed.columns = df_transposed.iloc[0]  
+        df_transposed = df_transposed[1:]  
+        df_transposed = df_transposed.reset_index().rename(columns={'index': 'Cluster'})
+        st.dataframe(df_transposed)
+
+        if file_option == "Upload CSV file":
+            upload_file = st.file_uploader("Upload CSV file", type=['csv'])
+
+            
+            if upload_file is not None:
+                if upload_file.name.endswith('csv'):
+                    rfm_input = pd.read_csv(upload_file)
+
+                    required_columns = {'Member_number', 'Recency', 'Frequency', 'Monetary'}
+                    if required_columns.issubset(rfm_input.columns):
+                        scaled_input = scaler.transform(rfm_input[['Recency', 'Frequency', 'Monetary']])
+
+                        # if model_choose == "Kmeans":
+                        rfm_input['Cluster'] = kmeans_model.predict(scaled_input)
+                        rfm_input['Type'] = rfm_input['Cluster'].apply(get_cluster_name)
+                        # else:
+                        #     rfm_input['Cluster'] = gmm_model.predict(scaled_input)
+                        #     rfm_input['Type'] = rfm_input['Cluster'].apply(get_cluster_name)
+
+                        st.write("Clustered Members from Uploaded File:")
+                        st.dataframe(rfm_input)
+                    else:
+                        st.error("The file must have these columns: 'Member_number', 'Recency', 'Frequency', 'Monetary'")
+                else:
+                    st.error("Unsupported file type. Please upload a CSV file.")
+
+        elif file_option == "Use predefined file":
+            rfm_input = pd.read_csv(predefined_file_path)
+
+            required_columns = {'Member_number', 'Recency', 'Frequency', 'Monetary'}
+            if required_columns.issubset(rfm_input.columns):
+                scaled_input = scaler.transform(rfm_input[['Recency', 'Frequency', 'Monetary']])
+
+                
+                rfm_input['Cluster'] = kmeans_model.predict(scaled_input)
+                rfm_input['Type'] = rfm_input['Cluster'].apply(get_cluster_name)
+                # else:
+                #     rfm_input['Cluster'] = gmm_model.predict(scaled_input)
+                #     rfm_input['Type'] = rfm_input['Cluster'].apply(get_cluster_name)
+
+                st.write("Clustered Members from Predefined File:")
+                st.dataframe(rfm_input)
+            else:
+                st.error("The file must have these columns: 'Member_number', 'Recency', 'Frequency', 'Monetary'")
+        
+        
+    # st.write("---")
+    #input id
+    st.write("---")
+    st.write("##### Input ID")
+    id = st.number_input("Enter customer ID", step=1, format="%d")
+    # model_id = st.radio("Choose model for Cluster prediction:", ["Kmeans", "GMM"], key="mod")
+    st.write(f"ID Suggestion: {list(np.random.choice(RFM_data['Member_number'].values, 5, replace=False))}")
+
+    if id in RFM_data['Member_number'].values:
+        
+        customer_df = df_RFM_4[df_RFM_4['Member_number'] == id]
+        
+
+        customer_df['Type'] = customer_df['Cluster'].apply(get_cluster_name)
+        customer_df = customer_df[['Member_number', 'Cluster', 'Type', 'Recency', 'Frequency', 'Monetary']]
+        st.dataframe(customer_df)
+        #show recommend 
+        show_cluster_stats(customer_df.iloc[0]['Cluster'],'Kmeans',transaction_data,product_data)
+        show_recommendations(customer_df.iloc[0]['Cluster'])
+
+    else:
+        st.warning("Customer ID not found! Please enter a valid ID from the dataset.")
+        
+    st.write("---")
+
+    #Input stats
+    st.write("##### Predict from Slider")
 
     recency = st.slider("Recency", 1, round(max(RFM_data['Recency'])), 1)
     frequency = st.slider("Frequency", 1, round(max(RFM_data['Frequency'])), 1)
     monetary = st.slider("Monetary", 1, round(max(RFM_data['Monetary'])), 1)
-    k_slider = st.radio("Choose number of clusters (k):", [3, 4], key="k_slider")
+    # model_slider = st.radio("Choose model for Cluster prediction:", ["Kmeans", "GMM"], key="slider")
 
-    st.write(f"Recency: {recency}, Frequency: {frequency}, Monetary: {monetary} with k = {k_slider}")
+    st.write(f"Recency: {recency}, Frequency: {frequency}, Monetary: {monetary} ")
     
     if st.button("Predict Cluster from Slider Inputs"):
         input_data = np.array([[recency, frequency, monetary]])
         scaled_input = scaler.transform(input_data)
         
-        if k_slider == 4:
-            kmeans_pred = kmeans_model.predict(scaled_input)
-            cluster_info =  cluster_summary_4[cluster_summary_4['cluster'] == kmeans_pred[0]].iloc[0]
-        else:
-            kmeans_pred = kmeans_model_3.predict(scaled_input)
-            cluster_info = cluster_summary_3[cluster_summary_3['cluster'] == kmeans_pred[0]].iloc[0]
+       
+        kmeans_pred = kmeans_model.predict(scaled_input)
+        cluster_info =  cluster_summary_4[cluster_summary_4['Cluster'] == kmeans_pred[0]].iloc[0]
+        # else:
+        #     kmeans_pred = gmm_model.predict(scaled_input)
+        #     cluster_info = cluster_summary_4_gmm[cluster_summary_4_gmm['Cluster'] == kmeans_pred[0]].iloc[0]
+        # name = ""
+        # if kmeans_pred[0] == 0: 
+        #     name += "Normal"
+        # elif kmeans_pred[0] == 1: 
+        #     name += "Risk"
+        # elif kmeans_pred[0] == 2: 
+        #     name += "Vip"
+        # else:
+        #     name += "New"
 
-        st.write(f"Predicted Cluster: {kmeans_pred[0]}")
-        st.write(f"##### Cluster {kmeans_pred[0]} Characteristics:")
+        st.write(f"##### Predicted Cluster: :blue[{kmeans_pred[0]} - {get_cluster_name(kmeans_pred[0])} customer]")
+        st.write(f"###### Cluster {kmeans_pred[0]} -  Characteristics:")
         st.write(f"- **Average Recency**: {round(cluster_info['Avg_Recency'])} days")
         st.write(f"- **Average Frequency**: {round(cluster_info['Avg_Frequency'])} orders")
         st.write(f"- **Average Monetary**: ${round(cluster_info['Avg_Monetary'])}")
        
-        show_cluster_stats(kmeans_pred[0],k_slider,transaction_data,product_data)
-        show_recommendations(kmeans_pred[0],k_slider)
-    
-    id = st.number_input("Enter customer ID", step=1, format="%d")
-    k = st.radio("Choose number of clusters (k):", [3, 4], key="k")
-
-    # Only run check when ID is entered (greater than 0, or you can change the condition based on your ID range)
-    if id in RFM_data['Member_number'].values:
-        if k == 3:
-            st.dataframe(df_RFM_3[df_RFM_3['Member_number'] == id])
-        elif k == 4:
-            st.dataframe(df_RFM_4[df_RFM_4['Member_number'] == id])
-    else:
-        st.warning("Customer ID not found! Please enter a valid ID from the dataset.")
-        
-    st.write("---")
-    st.write("##### Upload file (Batch Prediction using GMM)")
-
-    k_file = st.radio("Choose number of clusters for file (k):", [3, 4], key="k_file")
+        show_cluster_stats(kmeans_pred[0],"Kmeans",transaction_data,product_data)
+        show_recommendations(kmeans_pred[0])
 
 
-    # Predefined file 
-    predefined_file_path = "./data/df_RFM.csv"
-
-    file_option = st.radio("Choose file source", ("Use predefined file","Upload CSV file"))
-
-    if file_option == "Upload CSV file":
-        upload_file = st.file_uploader("Upload CSV file", type=['csv'])
-
-        if upload_file is not None:
-            if upload_file.name.endswith('csv'):
-                rfm_input = pd.read_csv(upload_file)
-
-                required_columns = {'Member_number', 'Recency', 'Frequency', 'Monetary'}
-                if required_columns.issubset(rfm_input.columns):
-                    scaled_input = scaler.transform(rfm_input[['Recency', 'Frequency', 'Monetary']])
-
-                    if k_file == 4:
-                        rfm_input['cluster'] = gmm_model.predict(scaled_input)
-                    else:
-                        rfm_input['cluster'] = gmm_model_3.predict(scaled_input)
-
-                    st.write("Clustered Members from Uploaded File:")
-                    st.dataframe(rfm_input.head(5))
-                else:
-                    st.error("The file must have these columns: 'Member_number', 'Recency', 'Frequency', 'Monetary'")
-            else:
-                st.error("Unsupported file type. Please upload a CSV file.")
-
-    elif file_option == "Use predefined file":
-        rfm_input = pd.read_csv(predefined_file_path)
-
-        required_columns = {'Member_number', 'Recency', 'Frequency', 'Monetary'}
-        if required_columns.issubset(rfm_input.columns):
-            scaled_input = scaler.transform(rfm_input[['Recency', 'Frequency', 'Monetary']])
-
-            if k_file == 4:
-                rfm_input['cluster'] = gmm_model.predict(scaled_input)
-            else:
-                rfm_input['cluster'] = gmm_model_3.predict(scaled_input)
-
-            st.write("Clustered Members from Predefined File:")
-            st.dataframe(rfm_input.head(5))
-        else:
-            st.error("The file must have these columns: 'Member_number', 'Recency', 'Frequency', 'Monetary'")
 
 # Create the pages and menu
 pages = {
