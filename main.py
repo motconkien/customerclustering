@@ -609,15 +609,6 @@ def models():
     with col7:
         plot_3d_scatter(df_RFM_4, kmeans_model, scaler, "Customer Segmentation with KMeans (3D)")
 
-    # # GMM results section
-    # st.markdown('<h5 style="color: #FF6347;">GMM with K = 4</h5>', unsafe_allow_html=True)
-    # col8, col9 = st.columns(2)
-
-    # with col8:
-    #     plot_treemap(cluster_summary_4_gmm, "Customer Segments - Treemap")
-
-    # with col9:
-    #     plot_3d_scatter(df_RFM_4_gmm, gmm_model, scaler, "Customer Segmentation with GMM (3D)")
 
 
 #prediction page: need to change k =3,4 to choose models
@@ -780,6 +771,6 @@ pg.run()
 st.sidebar.markdown("**👨‍🎓Group:**")
 st.sidebar.markdown("Huynh Triet & Hoang Huyen")  
 st.sidebar.markdown("**👩🏼‍🏫Teacher:**")
-st.sidebar.markdown("Dr. Khuat Thuy Phuong")  
+st.sidebar.markdown("Mrs. Khuat Thuy Phuong")  
 st.sidebar.markdown("**🗓️Timeline:**")
 st.sidebar.markdown("20/4/2025")
