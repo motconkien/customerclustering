@@ -697,10 +697,11 @@ def Prediction():
     # st.write("---")
     #input id
     st.write("---")
-    st.write("##### Input ID")
+    st.write("##### Customer Behavior Based on Customer ID")
+
     id = st.number_input("Enter customer ID", step=1, format="%d")
     # model_id = st.radio("Choose model for Cluster prediction:", ["Kmeans", "GMM"], key="mod")
-    st.write(f"ID Suggestion: {list(np.random.choice(RFM_data['Member_number'].values, 5, replace=False))}")
+    st.write(f"ID Suggestion: {[int(i) for i in np.random.choice(RFM_data['Member_number'].values, 5, replace=False)]}")
 
     if id in RFM_data['Member_number'].values:
         
@@ -720,7 +721,7 @@ def Prediction():
     st.write("---")
 
     #Input stats
-    st.write("##### Predict from Slider")
+    st.write("##### Customer Behavior Based on Recency, Frequency, and Monetary (RFM) Data")
 
     recency = st.slider("Recency", 1, round(max(RFM_data['Recency'])), 1)
     frequency = st.slider("Frequency", 1, round(max(RFM_data['Frequency'])), 1)
