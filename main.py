@@ -369,30 +369,72 @@ def datainsight():
 
     # Row 1: 3 metrics
     col1, col2, col3 = st.columns(3)
+    st.markdown("""
+    <style>
+    .big-font {
+        font-size:40px !important;
+        background: #41644A;
+        color:#FFFFFF;
+        border-radius: 10px;
+        padding-left: 10px
+        
+    }
+    </style>
+    """, unsafe_allow_html=True)
     with col1:
         st.markdown("#### 👥 Total Customers")
-        st.success(f"**{total_customers:,}**")
+        # st.success(f"**{total_customers:,}**")
+        st.markdown(f'<p class="big-font">{total_customers}</p>', unsafe_allow_html=True)
 
     with col2:
         st.markdown("#### 📦 Total Products")
-        st.success(f"**{total_products:,}**")
+        st.markdown(f'<p class="big-font">{total_products:,}</p>', unsafe_allow_html=True)
 
     with col3:
         st.markdown("#### 🗂️ Total Categories")
-        st.success(f"**{total_categories:,}**")
+        st.markdown(f'<p class="big-font">{total_categories:,}</p>', unsafe_allow_html=True)
 
-    st.markdown("---")  
+
 
     col4, col5 = st.columns(2)
     with col4:
         st.markdown("#### 🧾 Total Transactions")
-        st.info(f"**{total_transactions:,}**")
+        st.markdown(f'<p class="big-font">{total_transactions:,}</p>', unsafe_allow_html=True)
 
     with col5:
         st.markdown("#### 💰 Total Revenue")
-        st.info(f"**${total_revenue:,.0f}**")
+        st.markdown(f'<p class="big-font">{total_revenue:,.0f}</p>', unsafe_allow_html=True)
 
+    st.markdown("---")
 
+    st.subheader("💎 Top Selling Products by Quantity")
+    col6, col7 = st.columns(2)
+    # Top 10 Products
+    top_products = raw_data.groupby('productName')['items'].sum().sort_values(ascending=True).head(10)
+
+    with col6:
+        fig, ax = plt.subplots(figsize=(6, 4))
+        top_products.plot(kind='barh', ax=ax, color='skyblue', title="Top 10 Products", edgecolor='black')
+        ax.set_xlabel('Items Sold')
+        ax.set_ylabel('Product Name')
+        ax.set_title('Top 10 Products', fontsize=24)
+        plt.tight_layout()
+        st.pyplot(fig)  
+
+    # Top 10 Categories
+    top_categories = (raw_data.groupby('Category')['items'].sum().sort_values(ascending=False).head(10).reset_index()) 
+    with col7:
+        fig, ax = plt.subplots(figsize=(6, 4))
+        ax.barh(top_categories['Category'], top_categories['items'], edgecolor='black', color='lightgreen')
+        ax.set_xlabel('Items Sold')
+        ax.set_ylabel('Category')
+        ax.set_title('Top 10 Categories ', fontsize=24)
+        ax.invert_yaxis()
+        plt.tight_layout()
+
+        # Display in Streamlit
+        st.pyplot(fig)
+    st.markdown("---")  
     st.subheader("🏆 Top Selling Products by Revenue")
     merged = transaction_data.merge(product_data, on='productId')
     product_sales = merged.groupby('productName')['items'].sum().sort_values(ascending=False).head(10)
@@ -434,32 +476,7 @@ def datainsight():
     ltv_df.columns = ['Customer', 'Expenditure']
     st.dataframe(ltv_df.head(10))
 
-
-    # Top 10 Products
-    top_products = raw_data.groupby('productName')['items'].sum().sort_values(ascending=True).head(10)
-
-    with col4:
-        fig, ax = plt.subplots(figsize=(6, 4))
-        top_products.plot(kind='barh', ax=ax, color='skyblue', title="Top 10 Products", edgecolor='black')
-        ax.set_xlabel('Items Sold')
-        ax.set_ylabel('Product Name')
-        ax.set_title('Top 10 Products', fontsize=24)
-        plt.tight_layout()
-        st.pyplot(fig)  
-
-    # Top 10 Categories
-    top_categories = (raw_data.groupby('Category')['items'].sum().sort_values(ascending=False).head(10).reset_index()) 
-    with col5:
-        fig, ax = plt.subplots(figsize=(6, 4))
-        ax.barh(top_categories['Category'], top_categories['items'], edgecolor='black', color='lightgreen')
-        ax.set_xlabel('Items Sold')
-        ax.set_ylabel('Category')
-        ax.set_title('Top 10 Category ', fontsize=24)
-        ax.invert_yaxis()
-        plt.tight_layout()
-
-        # Display in Streamlit
-        st.pyplot(fig)
+    
     
     #-------------------The most expensive and cheapest products------------------#
     st.subheader("💰 Revenue Comparison: Expensive vs Cheap Products")
@@ -467,13 +484,17 @@ def datainsight():
     st.dataframe(compare_df)
     #for revenue
     figg = go.Figure()
-
+    bar_colors = compare_df['type'].map({
+    'Most Expensive': 'darkblue',
+    'Cheapest': 'green'
+    })
     # Bar chart for revenue sold
     figg.add_trace(go.Bar(
         x=compare_df['productName'],
         y=compare_df['total_revenue'],
         name='Total Revenue',
-        yaxis='y1'
+        yaxis='y1',
+        marker=dict(color=bar_colors)
     ))
 
     # Line chart for unit price
@@ -484,7 +505,8 @@ def datainsight():
         mode='lines+markers',
         line=dict(color='red', width=3),
         marker=dict(size=8),
-        yaxis='y2'
+        yaxis='y2',
+        
     ))
 
     # Layout with dual y-axes
@@ -514,7 +536,8 @@ def datainsight():
         x=compare_df['productName'],
         y=compare_df['quantity_sold'],
         name='Total Quantity Sold',
-        yaxis='y1'
+        yaxis='y1',
+        marker=dict(color=bar_colors)
     ))
 
     # Line chart for unit price
@@ -594,7 +617,7 @@ def models():
     **Conclusion**  
     - Because Silhouette Score of Kmeans is higher than that of GMM
     - The training time and prediction time of KMeans are shorter than those of GMM \n
-    => Kmeans is the best choice in this case       
+    => :blue[Kmeans is the best choice in this case]       
     """)
 
     st.write("---")
@@ -616,7 +639,6 @@ def models():
 def Prediction():
     st.title("Prediction")
 
-    
 
     #predict via files
     # Predefined file 
@@ -703,7 +725,8 @@ def Prediction():
         customer_df['Type'] = customer_df['Cluster'].apply(get_cluster_name)
         customer_df = customer_df[['Member_number', 'Cluster', 'Type', 'Recency', 'Frequency', 'Monetary']]
         st.dataframe(customer_df)
-        #show recommend 
+        #show recommend
+        st.write(f"##### Customer ID {id} :blue[{customer_df.iloc[0]['Cluster']} - {get_cluster_name(customer_df.iloc[0]['Cluster'])} customer]")
         show_cluster_stats(customer_df.iloc[0]['Cluster'],'Kmeans',transaction_data,product_data)
         show_recommendations(customer_df.iloc[0]['Cluster'])
 
@@ -760,6 +783,6 @@ pg.run()
 st.sidebar.markdown("**👨‍🎓Group:**")
 st.sidebar.markdown("Huynh Triet & Hoang Huyen")  
 st.sidebar.markdown("**👩🏼‍🏫Teacher:**")
-st.sidebar.markdown("Mrs. Khuat Thuy Phuong")  
+st.sidebar.markdown("Ms. Khuat Thuy Phuong")  
 st.sidebar.markdown("**🗓️Timeline:**")
 st.sidebar.markdown("20/4/2025")
