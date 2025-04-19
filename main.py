@@ -377,9 +377,10 @@ def datainsight():
         background: #41644A;
         color:#FFFFFF;
         border-radius: 10px;
-        padding-left: 10px
+        padding-left: 10px;
         
     }
+
     </style>
     """, unsafe_allow_html=True)
     with col1:
@@ -743,57 +744,60 @@ def Prediction():
     # st.write("---")
     #input id
     st.write("---")
-    st.write("##### Customer Behavior Based on Customer ID")
+    st.write("##### Customer Behavior Based On")
+    option = st.radio("Chose one of options below: ", options=['Customer ID', 'RFM Slider'])
+    if option == 'Customer ID':
+        st.write("###### Customer Behavior Based on Customer ID")
 
-    id = st.number_input("Enter customer ID", step=1, format="%d")
-    # model_id = st.radio("Choose model for Cluster prediction:", ["Kmeans", "GMM"], key="mod")
-    st.write(f"ID Suggestion: {[int(i) for i in np.random.choice(RFM_data['Member_number'].values, 5, replace=False)]}")
+        id = st.number_input("Enter customer ID", step=1, format="%d")
+        # model_id = st.radio("Choose model for Cluster prediction:", ["Kmeans", "GMM"], key="mod")
+        st.write(f"ID Suggestion: {[int(i) for i in np.random.choice(RFM_data['Member_number'].values, 5, replace=False)]}")
 
-    if id in RFM_data['Member_number'].values:
-        
-        customer_df = df_RFM_4[df_RFM_4['Member_number'] == id]
-        
+        if id in RFM_data['Member_number'].values:
+            
+            customer_df = df_RFM_4[df_RFM_4['Member_number'] == id]
+            
 
-        customer_df['Type'] = customer_df['Cluster'].apply(get_cluster_name)
-        customer_df = customer_df[['Member_number', 'Cluster', 'Type', 'Recency', 'Frequency', 'Monetary']]
-        st.dataframe(customer_df)
-        #show recommend
-        st.write(f"##### Customer ID {id} :blue[{customer_df.iloc[0]['Cluster']} - {get_cluster_name(customer_df.iloc[0]['Cluster'])} customer]")
-        show_cluster_stats(customer_df.iloc[0]['Cluster'],'Kmeans',transaction_data,product_data)
-        show_recommendations(customer_df.iloc[0]['Cluster'])
+            customer_df['Type'] = customer_df['Cluster'].apply(get_cluster_name)
+            customer_df = customer_df[['Member_number', 'Cluster', 'Type', 'Recency', 'Frequency', 'Monetary']]
+            st.dataframe(customer_df)
+            #show recommend
+            st.write(f"##### Customer ID {id} :blue[{customer_df.iloc[0]['Cluster']} - {get_cluster_name(customer_df.iloc[0]['Cluster'])} customer]")
+            show_cluster_stats(customer_df.iloc[0]['Cluster'],'Kmeans',transaction_data,product_data)
+            show_recommendations(customer_df.iloc[0]['Cluster'])
 
-    else:
-        st.warning("Customer ID not found! Please enter a valid ID from the dataset.")
+        else:
+            st.warning("Customer ID not found! Please enter a valid ID from the dataset.")
         
     st.write("---")
-
+    if option == 'RFM':
     #Input stats
-    st.write("##### Customer Behavior Based on Recency, Frequency, and Monetary (RFM) Data")
+        st.write("###### Customer Behavior Based on Recency, Frequency, and Monetary (RFM) Data")
 
-    recency = st.slider("Recency", 1, round(max(RFM_data['Recency'])), 1)
-    frequency = st.slider("Frequency", 1, round(max(RFM_data['Frequency'])), 1)
-    monetary = st.slider("Monetary", 1, round(max(RFM_data['Monetary'])), 1)
-    # model_slider = st.radio("Choose model for Cluster prediction:", ["Kmeans", "GMM"], key="slider")
+        recency = st.slider("Recency", 1, round(max(RFM_data['Recency'])), 1)
+        frequency = st.slider("Frequency", 1, round(max(RFM_data['Frequency'])), 1)
+        monetary = st.slider("Monetary", 1, round(max(RFM_data['Monetary'])), 1)
+        # model_slider = st.radio("Choose model for Cluster prediction:", ["Kmeans", "GMM"], key="slider")
 
-    st.write(f"Recency: {recency}, Frequency: {frequency}, Monetary: {monetary} ")
-    
-    if st.button("Predict Cluster from Slider Inputs"):
-        input_data = np.array([[recency, frequency, monetary]])
-        scaled_input = scaler.transform(input_data)
+        st.write(f"Recency: {recency}, Frequency: {frequency}, Monetary: {monetary} ")
         
-       
-        kmeans_pred = kmeans_model.predict(scaled_input)
-        cluster_info =  cluster_summary_4[cluster_summary_4['Cluster'] == kmeans_pred[0]].iloc[0]
-       
+        if st.button("Predict Cluster from Slider Inputs"):
+            input_data = np.array([[recency, frequency, monetary]])
+            scaled_input = scaler.transform(input_data)
+            
+        
+            kmeans_pred = kmeans_model.predict(scaled_input)
+            cluster_info =  cluster_summary_4[cluster_summary_4['Cluster'] == kmeans_pred[0]].iloc[0]
+        
 
-        st.write(f"##### Predicted Cluster: :blue[{kmeans_pred[0]} - {get_cluster_name(kmeans_pred[0])} customer]")
-        st.write(f"###### Cluster {kmeans_pred[0]} -  Characteristics:")
-        st.write(f"- **Average Recency**: {round(cluster_info['Avg_Recency'])} days")
-        st.write(f"- **Average Frequency**: {round(cluster_info['Avg_Frequency'])} orders")
-        st.write(f"- **Average Monetary**: ${round(cluster_info['Avg_Monetary'])}")
-       
-        show_cluster_stats(kmeans_pred[0],"Kmeans",transaction_data,product_data)
-        show_recommendations(kmeans_pred[0])
+            st.write(f"##### Predicted Cluster: :blue[{kmeans_pred[0]} - {get_cluster_name(kmeans_pred[0])} customer]")
+            st.write(f"###### Cluster {kmeans_pred[0]} -  Characteristics:")
+            st.write(f"- **Average Recency**: {round(cluster_info['Avg_Recency'])} days")
+            st.write(f"- **Average Frequency**: {round(cluster_info['Avg_Frequency'])} orders")
+            st.write(f"- **Average Monetary**: ${round(cluster_info['Avg_Monetary'])}")
+        
+            show_cluster_stats(kmeans_pred[0],"Kmeans",transaction_data,product_data)
+            show_recommendations(kmeans_pred[0])
 
 
 
