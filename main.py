@@ -818,7 +818,7 @@ pg.run()
 # Sidebar information
 st.sidebar.markdown("**👨‍🎓Group:**")
 st.sidebar.markdown("Huynh Triet & Hoang Huyen")  
-st.sidebar.markdown("**👩🏼‍🏫Teacher:**")
+st.sidebar.markdown("**👩🏼‍🏫Supervisor:**")
 st.sidebar.markdown("Ms. Khuat Thuy Phuong")  
 st.sidebar.markdown("**🗓️Timeline:**")
 st.sidebar.markdown("20/4/2025")
