@@ -48,6 +48,7 @@ cheap_summary = get_product_revenue_summary(top_cheap, 'Cheapest')
 
 # Combine
 compare_df = pd.concat([expensive_summary, cheap_summary])
+compare_df = compare_df.sort_values(by="price", ascending=False).reset_index()
 
 #load all models and scaler 
 with open('./models/kmeans_model.pkl', 'rb') as f:
@@ -432,7 +433,6 @@ def datainsight():
         ax.invert_yaxis()
         plt.tight_layout()
 
-        # Display in Streamlit
         st.pyplot(fig)
     st.markdown("---")  
     st.subheader("🏆 Top Selling Products by Revenue")
@@ -467,7 +467,7 @@ def datainsight():
     st.pyplot(fig)
     st.subheader("💰 Customer Lifetime Value (LTV)")
 
-    # Merge price with transactions
+
     merged = transaction_data.merge(product_data[['productId', 'price']], on='productId')
     merged['revenue'] = merged['items'] * merged['price']
 
@@ -483,94 +483,126 @@ def datainsight():
 
     st.dataframe(compare_df)
     #for revenue
-    figg = go.Figure()
-    bar_colors = compare_df['type'].map({
-    'Most Expensive': 'darkblue',
-    'Cheapest': 'green'
-    })
-    # Bar chart for revenue sold
-    figg.add_trace(go.Bar(
-        x=compare_df['productName'],
-        y=compare_df['total_revenue'],
-        name='Total Revenue',
-        yaxis='y1',
-        marker=dict(color=bar_colors)
-    ))
+    col8,col9 = st.columns(2)
+    with col8:
+        figg = go.Figure()
+        bar_colors = compare_df['type'].map({
+        'Most Expensive': 'darkblue',
+        'Cheapest': 'green'
+        })
+        # Bar chart for revenue sold
+        figg.add_trace(go.Bar(
+            x=compare_df['productName'],
+            y=compare_df['total_revenue'],
+            name='Total Revenue',
+            yaxis='y1',
+            showlegend=False,
+            marker=dict(color=bar_colors)
+        ))
 
-    # Line chart for unit price
-    figg.add_trace(go.Scatter(
-        x=compare_df['productName'],
-        y=compare_df['price'],
-        name='Unit Price',
-        mode='lines+markers',
-        line=dict(color='red', width=3),
-        marker=dict(size=8),
-        yaxis='y2',
-        
-    ))
+        # Line chart for unit price
+        figg.add_trace(go.Scatter(
+            x=compare_df['productName'],
+            y=compare_df['price'],
+            name='Unit Price',
+            mode='lines+markers',
+            line=dict(color='red', width=3),
+            marker=dict(size=8),
+            yaxis='y2'
+            
+        ))
 
-    # Layout with dual y-axes
-    figg.update_layout(
-        title="Total Revenue vs Unit Price (Most Expensive & Cheapest Products)",
-        xaxis=dict(title="Product"),
-        yaxis=dict(
-            title="Revenue ($)",
-            side="left"
-        ),
-        yaxis2=dict(
-            title="Unit Price ($)",
-            overlaying="y",
-            side="right"
-        ),
-        legend_title="Legend",
-        template='simple_white',
-        barmode='group',
-        xaxis_tickangle=45
-    )
-    st.plotly_chart(figg, use_container_width=True)
-    #for quantity
-    fig = go.Figure()
+        # Layout with dual y-axes
+        figg.update_layout(
+            title="Total Revenue vs Unit Price (Most Expensive & Cheapest Products)",
+            xaxis=dict(title="Product"),
+            yaxis=dict(
+                title="Revenue ($)",
+                side="left"
+            ),
+            yaxis2=dict(
+                title="Unit Price ($)",
+                overlaying="y",
+                side="right",
+                color='red'
+            ),
+            # legend_title="Legend",
+            template='simple_white',
+            barmode='group',
+            xaxis_tickangle=45,
+            # showlegend = True
+        )
+        figg.add_trace(go.Bar(
+            x=[None], y=[None],
+            name='Cheapest',
+            marker=dict(color='green'),
+            showlegend=True
+        ))
+        figg.add_trace(go.Bar(
+            x=[None], y=[None],
+            name='Most Expensive',
+            marker=dict(color='darkblue'),
+            showlegend=True
+        ))
+        st.plotly_chart(figg, use_container_width=True)
+        #for quantity
+        fig = go.Figure()
 
+    with col9:
     # Bar chart for quantity sold
-    fig.add_trace(go.Bar(
-        x=compare_df['productName'],
-        y=compare_df['quantity_sold'],
-        name='Total Quantity Sold',
-        yaxis='y1',
-        marker=dict(color=bar_colors)
-    ))
+        fig.add_trace(go.Bar(
+            x=compare_df['productName'],
+            y=compare_df['quantity_sold'],
+            name='Total Quantity Sold',
+            yaxis='y1',
+            showlegend=False,
+            marker=dict(color=bar_colors)
+        ))
 
-    # Line chart for unit price
-    fig.add_trace(go.Scatter(
-        x=compare_df['productName'],
-        y=compare_df['price'],
-        name='Unit Price',
-        mode='lines+markers',
-        line=dict(color='red', width=3),
-        marker=dict(size=8),
-        yaxis='y2'
-    ))
+        # Line chart for unit price
+        fig.add_trace(go.Scatter(
+            x=compare_df['productName'],
+            y=compare_df['price'],
+            name='Unit Price',
+            mode='lines+markers',
+            line=dict(color='red', width=3),
+            marker=dict(size=8),
+            yaxis='y2'
+        ))
 
-    # Layout with dual y-axes
-    fig.update_layout(
-        title="Quantity Sold vs Unit Price (Most Expensive & Cheapest Products)",
-        xaxis=dict(title="Product"),
-        yaxis=dict(
-            title="Quantity Sold",
-            side="left"
-        ),
-        yaxis2=dict(
-            title="Unit Price ($)",
-            overlaying="y",
-            side="right"
-        ),
-        legend_title="Legend",
-        template='simple_white',
-        barmode='group',
-        xaxis_tickangle=45
-    )
-
-    st.plotly_chart(fig, use_container_width=True)
+        # Layout with dual y-axes
+        fig.update_layout(
+            title="Quantity Sold vs Unit Price (Most Expensive & Cheapest Products)",
+            xaxis=dict(title="Product"),
+            yaxis=dict(
+                title="Quantity Sold",
+                side="left"
+            ),
+            yaxis2=dict(
+                title="Unit Price ($)",
+                overlaying="y",
+                side="right",
+                
+            ),
+            legend_title="Legend",
+            template='simple_white',
+            barmode='group',
+            xaxis_tickangle=45,
+           
+        )
+        fig.add_trace(go.Bar(
+            x=[None], y=[None],
+            name='Cheapest',
+            marker=dict(color='green'),
+            showlegend=True
+        ))
+        fig.add_trace(go.Bar(
+            x=[None], y=[None],
+            name='Most Expensive',
+            marker=dict(color='darkblue'),
+            showlegend=True
+        ))
+        st.plotly_chart(fig, use_container_width=True)
     st.write("Though bottled water has the much quantity sole but because the cheap product it is, the revenue is low. " \
     "In addition, napskin is the expensive product and the quantity sold is moderate, the revenue is more significant than others")
 
