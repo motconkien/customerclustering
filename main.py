@@ -799,7 +799,113 @@ def Prediction():
             show_cluster_stats(kmeans_pred[0],"Kmeans",transaction_data,product_data)
             show_recommendations(kmeans_pred[0])
 
+        st.write("---")
+    st.markdown("### 🆕 Customer Segment Analysis")
+    if st.button("Customer Segment Analysis"):
+       
+        # 1. Assign Segment Labels
+        cluster_labels = {
+            0: 'Normal',
+            1: 'Risk',
+            2: 'VIP',
+            3: 'New'
+        }
+        df_RFM_4['Segment'] = df_RFM_4['Cluster'].map(cluster_labels)
 
+        # 2. Merge Transactions with Segment & Product Info
+        transaction_data_merged = (
+            transaction_data
+            .merge(df_RFM_4[['Member_number', 'Segment']], on='Member_number', how='inner')
+            .merge(product_data, on='productId', how='left')
+        )
+
+        # 3. Aggregate Total Items per Product per Segment
+        product_by_segment = (
+            transaction_data_merged.groupby(['Segment', 'productName'])['items']
+            .sum().reset_index()
+        )
+
+        # 4. Remove Duplicated Product Names Across Segments, Keep Highest
+        unique_products = (
+            product_by_segment.sort_values(['productName', 'items'], ascending=[True, False])
+            .drop_duplicates(subset='productName', keep='first')
+        )
+
+        # 5. Helper Function to Get Top/Bottom Products
+        def get_top_bottom_products(df, n=5, top=True, label="Top"):
+            df_sorted = df.sort_values(['Segment', 'items'], ascending=[True, not top])
+            top_n = df_sorted.groupby('Segment').head(n).copy()
+            top_n['Rank'] = top_n.groupby('Segment').cumcount() + 1
+            pivot_df = top_n.pivot(index='Rank', columns='Segment', values='productName')
+            pivot_df.index.name = f'{label} Rank'
+            pivot_df.columns.name = None
+            return pivot_df, top_n
+
+        # 6. Top & Bottom Products
+        top5_table, top5_popular = get_top_bottom_products(unique_products, n=5, top=True, label="Top")
+        bottom5_table, bottom5_least = get_top_bottom_products(unique_products, n=5, top=False, label="Least")
+
+        # st.markdown('#### ⭐ Top 5 Most Popular Products per Segment')
+        # st.dataframe(top5_table)
+
+        # st.markdown('#### 🔻 Bottom 5 Least Popular Products per Segment')
+        # st.dataframe(bottom5_table)
+
+        # 7. Boost Suggestions
+        st.markdown('#### 🚀 Top 10 Boost Suggestions for Revenue Growth')
+        st.markdown("> High-performing products with strong sales and/or high unit price. Prioritize for promotion to drive revenue.")
+
+        boost_candidates = top5_popular[top5_popular['Segment'].isin(['VIP', 'Normal'])].copy()
+        boost_candidates = boost_candidates.merge(product_data[['productName', 'price']], on='productName', how='left')
+        boost_candidates['revenue'] = boost_candidates['items'] * boost_candidates['price']
+        boost_candidates = boost_candidates.sort_values(['Segment', 'items'], ascending=[True, False])
+
+        st.dataframe(boost_candidates[['Segment', 'productName', 'items', 'price', 'revenue']])
+
+        # 8. Products to Reduce
+        st.markdown('#### 📉 Products to Consider Reducing (Low Sales & Revenue)')
+        st.markdown("> Items with low purchase frequency and low total revenue. Consider reducing stock or replacing with better options.")
+
+        used_products = set(top5_popular['productName']) | set(bottom5_least['productName'])
+
+        low_perf_products = (
+            transaction_data_merged.groupby('productName')
+            .agg({'items': 'sum', 'price': 'mean'})
+            .reset_index()
+        )
+        low_perf_products['revenue'] = low_perf_products['items'] * low_perf_products['price']
+        low_perf_products = low_perf_products[~low_perf_products['productName'].isin(used_products)]
+
+        products_to_reduce = low_perf_products.sort_values(['items', 'revenue'], ascending=[True, True]).head(10)
+
+        st.dataframe(products_to_reduce)
+
+        # 9. Retention Product Candidates
+        st.markdown("#### 🧲 Products with High Retention Potential")
+        st.markdown("> Frequently re-purchased products, often by loyal customers. Useful for retention strategies and personalized offers.")
+
+        product_freq_segment = (
+            transaction_data_merged.groupby(['Segment', 'productName'])
+            .agg({'items': 'sum', 'Member_number': pd.Series.nunique})
+            .reset_index()
+            .rename(columns={'items': 'total_items', 'Member_number': 'num_buyers'})
+        )
+
+        retention_segments = ['VIP', 'Normal']
+        retention_products = product_freq_segment[product_freq_segment['Segment'].isin(retention_segments)].copy()
+        retention_products['retention_score'] = retention_products['total_items'] * retention_products['num_buyers']
+
+        top_retention_products = (
+            retention_products.sort_values(['Segment', 'retention_score'], ascending=[True, False])
+            .groupby('Segment')
+            .head(5)
+            .reset_index(drop=True)
+        )
+
+        st.dataframe(
+            top_retention_products[['Segment', 'productName', 'total_items', 'num_buyers', 'retention_score']],
+            use_container_width=True
+        )
 
 # Create the pages and menu
 pages = {
