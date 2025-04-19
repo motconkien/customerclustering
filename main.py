@@ -593,8 +593,8 @@ def models():
     st.markdown("""
     **Conclusion**  
     - Because Silhouette Score of Kmeans is higher than that of GMM
-    - The training time and prediction time of KMeans are shorter than those of GMM
-    <br> => Kmeans is the best choice in this case       
+    - The training time and prediction time of KMeans are shorter than those of GMM \n
+    => Kmeans is the best choice in this case       
     """)
 
     st.write("---")
