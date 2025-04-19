@@ -258,12 +258,25 @@ def show_cluster_stats(cluster_id, model, transaction_df, product_df):
 #----------------------------------------------------------------------------------------------------------------------------------------------------#
 # Main Function definitions
 def overview():
+
     st.image("./img/banner.webp",use_container_width=True)
     st.title("Project Overview")
     
     # Background
     with st.container():
-        st.subheader("Customer segmentation")
+        st.subheader("Program: Data Science Course (Final Project)")
+        st.markdown("##### Title: Customer Segmentation using RFM Analysis and Clustering Algorithms")
+        st.markdown("""
+        **Institution** : Informatics Center - University of Science  
+        **Supervisor**  : Ms. Khuat Thuy Phuong   
+                     
+        **Team members:**
+        - Hoang Thi Thanh Huyen
+        - Huynh Tan Minh Triet     
+        """)
+
+    with st.container():
+        st.subheader("Customer segmentation")       
         st.markdown("""
         Customer segmentation is a fundamental approach in data science that enables businesses to:
         - Understand different customer profiles based on purchasing behavior,
