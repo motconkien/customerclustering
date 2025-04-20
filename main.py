@@ -776,7 +776,7 @@ def Prediction():
             st.warning("Customer ID not found! Please enter a valid ID from the dataset.")
         
     st.write("---")
-    if option == 'RFM':
+    if option == 'RFM Slider':
     #Input stats
         st.write("###### Customer Behavior Based on Recency, Frequency, and Monetary (RFM) Data")
 
