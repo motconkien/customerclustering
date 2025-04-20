@@ -256,7 +256,7 @@ def show_cluster_stats(cluster_id, model, transaction_df, product_df):
 
 
 #----------------------------------------------------------------------------------------------------------------------------------------------------#
-# Main Function definitions
+# Main Function definitions - up
 def overview():
 
     st.image("./img/banner.webp",use_container_width=True)
