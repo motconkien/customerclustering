@@ -694,24 +694,25 @@ def Prediction():
     # model_choose = st.radio("Choose model for Cluster prediction:", ["Kmeans", "GMM"], key="model")
     predefined_file_path = "./data/df_RFM.csv"
 
+    upload_file = None
+    if file_option == "Upload CSV file":
+        upload_file = st.file_uploader("Upload CSV file", type=['csv'])
+
+    # Button to trigger clustering
     if st.button("Show cluster"):
-        #summary
-        
-        
+        # summary
         st.write("###### Clusters Summary")
         cluster_summary_4['Type'] = cluster_summary_4['Cluster'].apply(get_cluster_name)
         for col in ['Avg_Recency', 'Avg_Frequency', 'Avg_Monetary']:
             cluster_summary_4[col] = cluster_summary_4[col].round(2)
+
         df_transposed = cluster_summary_4[['Cluster', 'Type', 'Count', 'Avg_Recency', 'Avg_Frequency', 'Avg_Monetary']].T
-        df_transposed.columns = df_transposed.iloc[0]  
-        df_transposed = df_transposed[1:]  
+        df_transposed.columns = df_transposed.iloc[0]
+        df_transposed = df_transposed[1:]
         df_transposed = df_transposed.reset_index().rename(columns={'index': 'Cluster'})
         st.dataframe(df_transposed)
 
         if file_option == "Upload CSV file":
-            upload_file = st.file_uploader("Upload CSV file", type=['csv'])
-
-            
             if upload_file is not None:
                 if upload_file.name.endswith('csv'):
                     rfm_input = pd.read_csv(upload_file)
@@ -719,13 +720,8 @@ def Prediction():
                     required_columns = {'Member_number', 'Recency', 'Frequency', 'Monetary'}
                     if required_columns.issubset(rfm_input.columns):
                         scaled_input = scaler.transform(rfm_input[['Recency', 'Frequency', 'Monetary']])
-
-                        # if model_choose == "Kmeans":
                         rfm_input['Cluster'] = kmeans_model.predict(scaled_input)
                         rfm_input['Type'] = rfm_input['Cluster'].apply(get_cluster_name)
-                        # else:
-                        #     rfm_input['Cluster'] = gmm_model.predict(scaled_input)
-                        #     rfm_input['Type'] = rfm_input['Cluster'].apply(get_cluster_name)
 
                         st.write("Clustered Members from Uploaded File:")
                         st.dataframe(rfm_input)
@@ -733,20 +729,17 @@ def Prediction():
                         st.error("The file must have these columns: 'Member_number', 'Recency', 'Frequency', 'Monetary'")
                 else:
                     st.error("Unsupported file type. Please upload a CSV file.")
-
+            else:
+                st.warning("Please upload a file before clicking the button.")
+        
         elif file_option == "Use predefined file":
             rfm_input = pd.read_csv(predefined_file_path)
 
             required_columns = {'Member_number', 'Recency', 'Frequency', 'Monetary'}
             if required_columns.issubset(rfm_input.columns):
                 scaled_input = scaler.transform(rfm_input[['Recency', 'Frequency', 'Monetary']])
-
-                
                 rfm_input['Cluster'] = kmeans_model.predict(scaled_input)
                 rfm_input['Type'] = rfm_input['Cluster'].apply(get_cluster_name)
-                # else:
-                #     rfm_input['Cluster'] = gmm_model.predict(scaled_input)
-                #     rfm_input['Type'] = rfm_input['Cluster'].apply(get_cluster_name)
 
                 st.write("Clustered Members from Predefined File:")
                 st.dataframe(rfm_input)
