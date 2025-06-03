@@ -25,13 +25,13 @@ This project applies machine learning techniques to segment customers based on t
 
 ## 📁 Folder Structure
 
-customerclustering/
-├── data/ # Raw or cleaned data files
-├── img/ # Imgage
-├── model/ # Models are used in prediction
-├── main/ # Application source code 
-├── README.md
-└── requirements.txt
+customerclustering/ <br>
+├── data/ # Raw or cleaned data files <br>
+├── img/ # Imgage<br>
+├── model/ # Models are used in prediction<br>
+├── main/ # Application source code <br>
+├── README.md<br>
+└── requirements.txt<br>
 
 
 
