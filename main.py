@@ -266,14 +266,7 @@ def overview():
     with st.container():
         st.subheader("Program: Data Science Course (Final Project)")
         st.markdown("##### Title: Customer Segmentation using RFM Analysis and Clustering Algorithms")
-        st.markdown("""
-        **Institution** : Informatics Center - University of Science  
-        **Supervisor**  : Ms. Khuat Thuy Phuong   
-                     
-        **Team members:**
-        - Hoang Thi Thanh Huyen
-        - Huynh Tan Minh Triet     
-        """)
+        
 
     with st.container():
         st.subheader("Customer segmentation")       
@@ -927,10 +920,10 @@ pages = {
 pg = st.navigation(pages)
 pg.run()
 
-# Sidebar information
-st.sidebar.markdown("**👨‍🎓Group:**")
-st.sidebar.markdown("Huynh Triet & Hoang Huyen")  
-st.sidebar.markdown("**👩🏼‍🏫Supervisor:**")
-st.sidebar.markdown("Ms. Khuat Thuy Phuong")  
-st.sidebar.markdown("**🗓️Timeline:**")
-st.sidebar.markdown("20/4/2025")
+# # Sidebar information
+# st.sidebar.markdown("**👨‍🎓Group:**")
+# st.sidebar.markdown("Huynh Triet & Hoang Huyen")  
+# st.sidebar.markdown("**👩🏼‍🏫Supervisor:**")
+# st.sidebar.markdown("Ms. Khuat Thuy Phuong")  
+# st.sidebar.markdown("**🗓️Timeline:**")
+# st.sidebar.markdown("20/4/2025")
