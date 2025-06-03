@@ -21,7 +21,7 @@ This project applies machine learning techniques to segment customers based on t
 ## 📊 Clustering Techniques
 
 - **K-Means Clustering**
-- (Optional: Add more like DBSCAN, Hierarchical Clustering if used)
+- **GMM**
 
 ## 📁 Folder Structure
 
