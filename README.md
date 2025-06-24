@@ -28,6 +28,8 @@ This project applies machine learning techniques to segment customers based on t
 customerclustering/ <br>
 ├── data/ # Raw or cleaned data files <br>
 ├── img/ # Imgage<br>
+├── models-training <br>
+├── EDA <br>
 ├── model/ # Models are used in prediction<br>
 ├── main/ # Application source code <br>
 ├── README.md<br>
